@@ -56,6 +56,9 @@ async function main() {
   const productivity = await prisma.category.findUniqueOrThrow({
     where: { id: 'default-productivity' },
   });
+  const education = await prisma.category.findUniqueOrThrow({
+    where: { id: 'default-education' },
+  });
   const utilities = await prisma.category.findUniqueOrThrow({
     where: { id: 'default-utilities' },
   });
@@ -93,6 +96,13 @@ async function main() {
       price: 10.99,
       categoryId: entertainment.id,
       nextRenewalDate: new Date('2026-06-02T00:00:00.000Z'),
+    },
+    {
+      id: 'demo-waking-up',
+      name: 'Waking Up',
+      price: 14.99,
+      categoryId: education.id,
+      nextRenewalDate: new Date('2026-06-05T00:00:00.000Z'),
     },
     {
       id: 'demo-figma',
