@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum BillingFrequency {
+  weekly
+  monthly
+  quarterly
+  yearly
+}
+
+enum SubscriptionStatus {
+  active
+  cancelled
+}
+
+enum PaymentMethodType {
+  card
+  paypal
+  bank_account
+  cash
+  other
+}
+
+enum ReminderKind {
+  seven_days
+  one_day
+}
+
+model User {
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  passwordHash         String
+  name                 String?
+  defaultCurrency      String                @default("USD")
+  locale               String                @default("en")
+  timezone             String                @default("UTC")
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  categories           Category[]
+  paymentMethods       PaymentMethod[]
+  subscriptions        Subscription[]
+  subscriptionPayments SubscriptionPayment[]
+  reminderLogs         ReminderLog[]
+  passwordResetTokens  PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Category {
+  id             String         @id @default(cuid())
+  userId         String?
+  name           String
+  translationKey String?
+  color          String         @default("#2EE59D")
+  isDefault      Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptions  Subscription[]
+
+  @@index([userId])
+}
+
+model PaymentMethod {
+  id            String            @id @default(cuid())
+  userId        String
+  name          String
+  type          PaymentMethodType @default(other)
+  lastFour      String?
+  color         String            @default("#101828")
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
+  payments      SubscriptionPayment[]
+
+  @@index([userId])
+}
+
+model Subscription {
+  id               String                @id @default(cuid())
+  userId           String
+  categoryId       String?
+  paymentMethodId  String?
+  name             String
+  price            Decimal               @db.Decimal(10, 2)
+  currency         String
+  billingFrequency BillingFrequency
+  nextRenewalDate  DateTime
+  status           SubscriptionStatus    @default(active)
+  notes            String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  cancelledAt      DateTime?
+  user             User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         Category?             @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  paymentMethod    PaymentMethod?        @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  payments         SubscriptionPayment[]
+  reminderLogs     ReminderLog[]
+
+  @@index([userId, status])
+  @@index([nextRenewalDate])
+}
+
+model SubscriptionPayment {
+  id              String         @id @default(cuid())
+  userId          String
+  subscriptionId  String
+  paymentMethodId String?
+  amount          Decimal        @db.Decimal(10, 2)
+  currency        String
+  paidAt          DateTime
+  notes           String?
+  createdAt       DateTime       @default(now())
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription    Subscription   @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  paymentMethod   PaymentMethod? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([subscriptionId])
+}
+
+model ReminderLog {
+  id             String       @id @default(cuid())
+  userId         String
+  subscriptionId String
+  kind           ReminderKind
+  renewalDate    DateTime
+  sentAt         DateTime     @default(now())
+  email          String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, kind, renewalDate])
+  @@index([userId])
+}
