@@ -19,6 +19,8 @@ Express API for the PayTrack subscription manager.
 npm install
 cp .env.example .env
 docker compose up -d mysql
+npm run prisma:migrate
+npm run db:seed
 npm run prisma:generate
 npm run dev
 ```
@@ -29,4 +31,13 @@ Health check:
 
 ```bash
 curl http://localhost:5318/health
+```
+
+## Development Credentials
+
+After running `npm run db:seed`, use:
+
+```text
+Email: demo@paytrack.local
+Password: PayTrack123!
 ```
