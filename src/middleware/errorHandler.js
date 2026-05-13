@@ -4,6 +4,7 @@ export function errorHandler(error, _request, response, _next) {
   response.status(status).json({
     error: {
       message: status === 500 ? 'Internal server error' : error.message,
+      details: status === 500 ? undefined : error.details,
     },
   });
 }
