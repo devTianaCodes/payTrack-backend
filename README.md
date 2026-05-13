@@ -23,10 +23,10 @@ npm run prisma:generate
 npm run dev
 ```
 
-The API runs on `http://localhost:4000`.
+The API runs on `http://localhost:5318`.
 
 Health check:
 
 ```bash
-curl http://localhost:4000/health
+curl http://localhost:5318/health
 ```
