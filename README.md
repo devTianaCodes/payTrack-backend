@@ -13,6 +13,10 @@ Express API for the PayTrack subscription manager.
 - node-cron
 - Zod
 
+## Architecture Flow
+
+![PayTrack app logic and architecture](docs/paytrack-architecture-flow.png)
+
 ## Local Setup
 
 ```bash

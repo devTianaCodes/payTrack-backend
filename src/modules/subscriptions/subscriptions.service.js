@@ -4,6 +4,10 @@ import { createHttpError } from '../../utils/httpError.js';
 const subscriptionInclude = {
   category: true,
   paymentMethod: true,
+  payments: {
+    orderBy: { paidAt: 'desc' },
+    take: 3,
+  },
 };
 
 export function listSubscriptions(userId, filters) {
@@ -96,6 +100,52 @@ export async function restoreSubscription(userId, subscriptionId) {
   });
 }
 
+export async function listSubscriptionPayments(userId, subscriptionId) {
+  await getSubscription(userId, subscriptionId);
+
+  return prisma.subscriptionPayment.findMany({
+    where: { userId, subscriptionId },
+    include: { paymentMethod: true },
+    orderBy: { paidAt: 'desc' },
+    take: 20,
+  });
+}
+
+export async function recordSubscriptionPayment(user, subscriptionId, data) {
+  const subscription = await getSubscription(user.id, subscriptionId);
+
+  if (subscription.status !== 'active') {
+    throw createHttpError(400, 'Only active subscriptions can be marked as paid');
+  }
+
+  await validateRelations(user.id, { paymentMethodId: data.paymentMethodId });
+
+  const paymentDetails = {
+    userId: user.id,
+    subscriptionId,
+    paymentMethodId: data.paymentMethodId ?? subscription.paymentMethodId,
+    amount: data.amount ?? subscription.price,
+    currency: data.currency ?? subscription.currency,
+    paidAt: data.paidAt ?? new Date(),
+    notes: data.notes ?? null,
+  };
+
+  return prisma.$transaction(async (tx) => {
+    const payment = await tx.subscriptionPayment.create({
+      data: paymentDetails,
+      include: { paymentMethod: true },
+    });
+
+    const updatedSubscription = await tx.subscription.update({
+      where: { id: subscriptionId },
+      data: { nextRenewalDate: getNextRenewalDate(subscription) },
+      include: subscriptionInclude,
+    });
+
+    return { payment, subscription: updatedSubscription };
+  });
+}
+
 function buildSubscriptionFilters(userId, filters) {
   const where = { userId };
 
@@ -158,4 +208,26 @@ function normalizeSubscriptionUpdate(data) {
   }
 
   return update;
+}
+
+function getNextRenewalDate(subscription) {
+  const nextDate = new Date(subscription.nextRenewalDate);
+
+  if (subscription.billingFrequency === 'weekly') {
+    nextDate.setDate(nextDate.getDate() + 7);
+    return nextDate;
+  }
+
+  if (subscription.billingFrequency === 'quarterly') {
+    nextDate.setMonth(nextDate.getMonth() + 3);
+    return nextDate;
+  }
+
+  if (subscription.billingFrequency === 'yearly') {
+    nextDate.setFullYear(nextDate.getFullYear() + 1);
+    return nextDate;
+  }
+
+  nextDate.setMonth(nextDate.getMonth() + 1);
+  return nextDate;
 }

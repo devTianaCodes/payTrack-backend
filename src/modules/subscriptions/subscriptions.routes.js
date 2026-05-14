@@ -3,6 +3,7 @@ import { requireAuth } from '../../middleware/requireAuth.js';
 import { validateRequest } from '../../middleware/validateRequest.js';
 import { asyncRoute } from '../../utils/asyncRoute.js';
 import {
+  createSubscriptionPaymentSchema,
   createSubscriptionSchema,
   listSubscriptionsQuerySchema,
   subscriptionParamsSchema,
@@ -13,7 +14,9 @@ import {
   createSubscription,
   archiveSubscription,
   getSubscription,
+  listSubscriptionPayments,
   listSubscriptions,
+  recordSubscriptionPayment,
   restoreSubscription,
   updateSubscription,
 } from './subscriptions.service.js';
@@ -46,6 +49,24 @@ router.get(
   asyncRoute(async (request, response) => {
     const subscription = await getSubscription(request.user.id, request.params.id);
     response.json({ subscription });
+  }),
+);
+
+router.get(
+  '/:id/payments',
+  validateRequest({ params: subscriptionParamsSchema }),
+  asyncRoute(async (request, response) => {
+    const payments = await listSubscriptionPayments(request.user.id, request.params.id);
+    response.json({ payments });
+  }),
+);
+
+router.post(
+  '/:id/payments',
+  validateRequest({ params: subscriptionParamsSchema, body: createSubscriptionPaymentSchema }),
+  asyncRoute(async (request, response) => {
+    const result = await recordSubscriptionPayment(request.user, request.params.id, request.body);
+    response.status(201).json(result);
   }),
 );
 

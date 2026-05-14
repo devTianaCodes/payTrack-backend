@@ -35,3 +35,11 @@ export const updateSubscriptionSchema = createSubscriptionSchema
   .refine((value) => Object.keys(value).length > 0, {
     message: 'At least one field is required',
   });
+
+export const createSubscriptionPaymentSchema = z.object({
+  amount: z.coerce.number().positive().optional(),
+  currency: z.string().trim().length(3).toUpperCase().optional(),
+  paidAt: z.coerce.date().optional(),
+  paymentMethodId: optionalId,
+  notes: z.string().trim().max(500).nullable().optional(),
+});
