@@ -1,6 +1,6 @@
 import { prisma } from '../../prisma/client.js';
 
-const upcomingRenewalLimit = 5;
+const upcomingRenewalLimit = 7;
 
 export async function getDashboardSummary(userId) {
   const subscriptions = await prisma.subscription.findMany({
@@ -28,9 +28,17 @@ export async function getDashboardSummary(userId) {
       name: categoryName,
       value: 0,
       color: subscription.category?.color ?? '#101828',
+      subscriptions: [],
     };
 
-    existingCategory.value += getMonthlyAmount(subscription);
+    const monthlyAmount = getMonthlyAmount(subscription);
+
+    existingCategory.value += monthlyAmount;
+    existingCategory.subscriptions.push({
+      id: subscription.id,
+      name: subscription.name,
+      value: roundMoney(monthlyAmount),
+    });
     categoryMap.set(categoryName, existingCategory);
   }
 
@@ -43,6 +51,7 @@ export async function getDashboardSummary(userId) {
     categoryMix: Array.from(categoryMap.values())
       .map((category) => ({
         ...category,
+        subscriptions: category.subscriptions.sort((left, right) => right.value - left.value),
         value: roundMoney(category.value),
       }))
       .sort((left, right) => right.value - left.value),

@@ -11,6 +11,7 @@ const defaultCategories = [
   { name: 'Productivity', translationKey: 'category.productivity', color: '#2EE59D' },
   { name: 'Fitness', translationKey: 'category.fitness', color: '#38BDF8' },
   { name: 'Education', translationKey: 'category.education', color: '#F59E0B' },
+  { name: 'Programming', translationKey: 'category.programming', color: '#38BDF8' },
   { name: 'Utilities', translationKey: 'category.utilities', color: '#101828' },
   { name: 'Finance', translationKey: 'category.finance', color: '#6366F1' },
 ];
@@ -55,6 +56,9 @@ async function main() {
   });
   const productivity = await prisma.category.findUniqueOrThrow({
     where: { id: 'default-productivity' },
+  });
+  const programming = await prisma.category.findUniqueOrThrow({
+    where: { id: 'default-programming' },
   });
   const education = await prisma.category.findUniqueOrThrow({
     where: { id: 'default-education' },
@@ -117,6 +121,20 @@ async function main() {
       price: 2.99,
       categoryId: utilities.id,
       nextRenewalDate: new Date('2026-05-25T00:00:00.000Z'),
+    },
+    {
+      id: 'demo-codex',
+      name: 'Codex',
+      price: 20,
+      categoryId: programming.id,
+      nextRenewalDate: new Date('2026-06-12T00:00:00.000Z'),
+    },
+    {
+      id: 'demo-claude',
+      name: 'Claude',
+      price: 20,
+      categoryId: programming.id,
+      nextRenewalDate: new Date('2026-06-14T00:00:00.000Z'),
     },
   ];
 
