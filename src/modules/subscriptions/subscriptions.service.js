@@ -70,9 +70,30 @@ export async function cancelSubscription(userId, subscriptionId) {
   });
 }
 
-export async function deleteSubscription(userId, subscriptionId) {
+export async function archiveSubscription(userId, subscriptionId) {
   await getSubscription(userId, subscriptionId);
-  await prisma.subscription.delete({ where: { id: subscriptionId } });
+
+  return prisma.subscription.update({
+    where: { id: subscriptionId },
+    data: {
+      status: 'archived',
+      cancelledAt: new Date(),
+    },
+    include: subscriptionInclude,
+  });
+}
+
+export async function restoreSubscription(userId, subscriptionId) {
+  await getSubscription(userId, subscriptionId);
+
+  return prisma.subscription.update({
+    where: { id: subscriptionId },
+    data: {
+      status: 'active',
+      cancelledAt: null,
+    },
+    include: subscriptionInclude,
+  });
 }
 
 function buildSubscriptionFilters(userId, filters) {
@@ -128,7 +149,7 @@ function normalizeSubscriptionUpdate(data) {
     update.paymentMethodId = update.paymentMethodId ?? null;
   }
 
-  if (update.status === 'cancelled' && !update.cancelledAt) {
+  if ((update.status === 'cancelled' || update.status === 'archived') && !update.cancelledAt) {
     update.cancelledAt = new Date();
   }
 

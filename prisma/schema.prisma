@@ -17,6 +17,7 @@ enum BillingFrequency {
 enum SubscriptionStatus {
   active
   cancelled
+  archived
 }
 
 enum PaymentMethodType {

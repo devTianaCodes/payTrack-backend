@@ -11,9 +11,10 @@ import {
 import {
   cancelSubscription,
   createSubscription,
-  deleteSubscription,
+  archiveSubscription,
   getSubscription,
   listSubscriptions,
+  restoreSubscription,
   updateSubscription,
 } from './subscriptions.service.js';
 
@@ -70,8 +71,17 @@ router.delete(
   '/:id',
   validateRequest({ params: subscriptionParamsSchema }),
   asyncRoute(async (request, response) => {
-    await deleteSubscription(request.user.id, request.params.id);
-    response.status(204).send();
+    const subscription = await archiveSubscription(request.user.id, request.params.id);
+    response.json({ subscription });
+  }),
+);
+
+router.post(
+  '/:id/restore',
+  validateRequest({ params: subscriptionParamsSchema }),
+  asyncRoute(async (request, response) => {
+    const subscription = await restoreSubscription(request.user.id, request.params.id);
+    response.json({ subscription });
   }),
 );
 

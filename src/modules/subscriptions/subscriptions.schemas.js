@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const billingFrequency = z.enum(['weekly', 'monthly', 'quarterly', 'yearly']);
-const subscriptionStatus = z.enum(['active', 'cancelled']);
+const subscriptionStatus = z.enum(['active', 'cancelled', 'archived']);
 const optionalId = z.string().min(1).nullable().optional();
 
 export const subscriptionParamsSchema = z.object({
