@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { prisma } from '../../prisma/client.js';
+import { isReminderEnabled } from './reminderPreferences.js';
 import { sendRenewalReminderEmail } from './reminders.mailer.js';
 
 const reminderWindows = [
@@ -97,14 +98,4 @@ function addDaysAtStartOfDay(date, days) {
   result.setHours(0, 0, 0, 0);
   result.setDate(result.getDate() + days);
   return result;
-}
-
-function isReminderEnabled(subscription, kind) {
-  if (subscription.reminderPreferences.length === 0) {
-    return true;
-  }
-
-  return subscription.reminderPreferences.some(
-    (preference) => preference.kind === kind && preference.isEnabled,
-  );
 }
