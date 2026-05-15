@@ -24,11 +24,17 @@ export async function runReminderJob(now = new Date()) {
         },
       },
       include: {
+        reminderPreferences: true,
         user: true,
       },
     });
 
     for (const subscription of subscriptions) {
+      if (!isReminderEnabled(subscription, reminderWindow.kind)) {
+        skippedCount += 1;
+        continue;
+      }
+
       const existingLog = await prisma.reminderLog.findUnique({
         where: {
           subscriptionId_kind_renewalDate: {
@@ -91,4 +97,14 @@ function addDaysAtStartOfDay(date, days) {
   result.setHours(0, 0, 0, 0);
   result.setDate(result.getDate() + days);
   return result;
+}
+
+function isReminderEnabled(subscription, kind) {
+  if (subscription.reminderPreferences.length === 0) {
+    return true;
+  }
+
+  return subscription.reminderPreferences.some(
+    (preference) => preference.kind === kind && preference.isEnabled,
+  );
 }

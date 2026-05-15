@@ -115,9 +115,23 @@ model Subscription {
   paymentMethod    PaymentMethod?        @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
   payments         SubscriptionPayment[]
   reminderLogs     ReminderLog[]
+  reminderPreferences SubscriptionReminderPreference[]
 
   @@index([userId, status])
   @@index([nextRenewalDate])
+}
+
+model SubscriptionReminderPreference {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  kind           ReminderKind
+  isEnabled      Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, kind])
+  @@index([subscriptionId])
 }
 
 model SubscriptionPayment {

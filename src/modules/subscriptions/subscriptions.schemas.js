@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const billingFrequency = z.enum(['weekly', 'monthly', 'quarterly', 'yearly']);
+const reminderKind = z.enum(['seven_days', 'one_day']);
 const subscriptionStatus = z.enum(['active', 'cancelled', 'archived']);
 const optionalId = z.string().min(1).nullable().optional();
 
@@ -42,4 +43,8 @@ export const createSubscriptionPaymentSchema = z.object({
   paidAt: z.coerce.date().optional(),
   paymentMethodId: optionalId,
   notes: z.string().trim().max(500).nullable().optional(),
+});
+
+export const updateReminderPreferencesSchema = z.object({
+  enabledKinds: z.array(reminderKind).max(2),
 });

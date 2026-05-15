@@ -7,6 +7,7 @@ import {
   createSubscriptionSchema,
   listSubscriptionsQuerySchema,
   subscriptionParamsSchema,
+  updateReminderPreferencesSchema,
   updateSubscriptionSchema,
 } from './subscriptions.schemas.js';
 import {
@@ -18,6 +19,7 @@ import {
   listSubscriptions,
   recordSubscriptionPayment,
   restoreSubscription,
+  updateReminderPreferences,
   updateSubscription,
 } from './subscriptions.service.js';
 
@@ -67,6 +69,15 @@ router.post(
   asyncRoute(async (request, response) => {
     const result = await recordSubscriptionPayment(request.user, request.params.id, request.body);
     response.status(201).json(result);
+  }),
+);
+
+router.patch(
+  '/:id/reminder-preferences',
+  validateRequest({ params: subscriptionParamsSchema, body: updateReminderPreferencesSchema }),
+  asyncRoute(async (request, response) => {
+    const subscription = await updateReminderPreferences(request.user.id, request.params.id, request.body);
+    response.json({ subscription });
   }),
 );
 

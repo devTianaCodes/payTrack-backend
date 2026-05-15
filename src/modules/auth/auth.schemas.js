@@ -17,3 +17,12 @@ export const loginSchema = z.object({
   email,
   password,
 });
+
+export const passwordResetRequestSchema = z.object({
+  email,
+});
+
+export const passwordResetConfirmSchema = z.object({
+  token: z.string().trim().min(32),
+  password,
+});

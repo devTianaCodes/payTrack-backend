@@ -8,7 +8,11 @@ const subscriptionInclude = {
     orderBy: { paidAt: 'desc' },
     take: 3,
   },
+  reminderPreferences: {
+    orderBy: { kind: 'asc' },
+  },
 };
+const reminderKinds = ['seven_days', 'one_day'];
 
 export function listSubscriptions(userId, filters) {
   return prisma.subscription.findMany({
@@ -32,6 +36,9 @@ export async function createSubscription(user, data) {
       categoryId: data.categoryId ?? null,
       paymentMethodId: data.paymentMethodId ?? null,
       notes: data.notes,
+      reminderPreferences: {
+        create: getReminderPreferenceRows(reminderKinds),
+      },
     },
     include: subscriptionInclude,
   });
@@ -146,6 +153,28 @@ export async function recordSubscriptionPayment(user, subscriptionId, data) {
   });
 }
 
+export async function updateReminderPreferences(userId, subscriptionId, data) {
+  await getSubscription(userId, subscriptionId);
+
+  return prisma.$transaction(async (tx) => {
+    await tx.subscriptionReminderPreference.deleteMany({
+      where: { subscriptionId },
+    });
+
+    await tx.subscriptionReminderPreference.createMany({
+      data: getReminderPreferenceRows(data.enabledKinds).map((preference) => ({
+        ...preference,
+        subscriptionId,
+      })),
+    });
+
+    return tx.subscription.findUniqueOrThrow({
+      where: { id: subscriptionId },
+      include: subscriptionInclude,
+    });
+  });
+}
+
 function buildSubscriptionFilters(userId, filters) {
   const where = { userId };
 
@@ -230,4 +259,11 @@ function getNextRenewalDate(subscription) {
 
   nextDate.setMonth(nextDate.getMonth() + 1);
   return nextDate;
+}
+
+function getReminderPreferenceRows(enabledKinds) {
+  return reminderKinds.map((kind) => ({
+    kind,
+    isEnabled: enabledKinds.includes(kind),
+  }));
 }
