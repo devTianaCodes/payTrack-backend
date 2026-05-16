@@ -37,6 +37,13 @@ Health check:
 curl http://localhost:5318/health
 ```
 
+## Environment Notes
+
+- `FRONTEND_URL` sets the primary frontend origin for local development.
+- `FRONTEND_URLS` can be used for comma-separated deployed origins, such as preview and production URLs.
+- `COOKIE_SAME_SITE=lax` works for same-site/local setups.
+- Use `COOKIE_SAME_SITE=none` only for HTTPS cross-site frontend/backend deployments; cookies are then sent with `Secure`.
+
 ## Development Credentials
 
 After running `npm run db:seed`, use:

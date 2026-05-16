@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import { createCorsOriginHandler } from './config/cors.js';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
@@ -16,7 +17,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin: createCorsOriginHandler(env.frontendUrls),
     credentials: true,
   }),
 );
